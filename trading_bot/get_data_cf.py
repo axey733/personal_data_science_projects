@@ -12,16 +12,19 @@ import time
 
 def daily_equity_quotes(event, context):
     # Get the api key from cloud storage
+    print ("Get API key")
     storage_client = storage.Client()
-    bucket = storage_client.get_bucket('<NAME OF YOUR CLOUD STORAGE BUCKET>')
-    blob = bucket.blob('<NAME OF YOUR SECRET FILE>')
+    bucket = storage_client.get_bucket('algobot_bucket_1')
+    blob = bucket.blob('ameritrade-key.txt')
     api_key = blob.download_as_string()
-    
+    print ("API Key:")
+    print(api_key)
     # Check if the market was open today. Cloud functions use UTC and I'm in
     # eastern so I convert the timezone
     today = datetime.today().astimezone(pytz.timezone("America/New_York"))
     today_fmt = today.strftime('%Y-%m-%d')
-
+    print("time:")
+    print(today_fmt)
     # Call the td ameritrade hours endpoint for equities to see if it is open
     market_url = 'https://api.tdameritrade.com/v1/marketdata/EQUITY/hours'
 
@@ -29,7 +32,7 @@ def daily_equity_quotes(event, context):
         'apikey': api_key,
         'date': today_fmt
         }
-    
+
     request = requests.get(
         url=market_url,
         params=params
@@ -54,7 +57,7 @@ def daily_equity_quotes(event, context):
                 soup = BeautifulSoup(site, 'html.parser')
                 table = soup.find('table', {'class': 'quotes'})
                 for row in table.findAll('tr')[1:]:
-                    symbols.append(row.findAll('td')[0].text.rstrip())       
+                    symbols.append(row.findAll('td')[0].text.rstrip())
 
             # Remove the extra letters on the end
             symbols_clean = []
@@ -64,7 +67,7 @@ def daily_equity_quotes(event, context):
                 symbols_clean.append((each.split('-')[0]))
 
             # The TD Ameritrade api has a limit to the number of symbols you can get data for
-            # in a single call so we chunk the list into 200 symbols at a time 
+            # in a single call so we chunk the list into 200 symbols at a time
             def chunks(l, n):
                 """
                 Takes in a list and how long you want
@@ -73,7 +76,7 @@ def daily_equity_quotes(event, context):
                 n = max(1, n)
                 return (l[i:i+n] for i in range(0, len(l), n))
 
-            symbols_chunked = list(chunks(list(set(symbols_clean)), 200))            
+            symbols_chunked = list(chunks(list(set(symbols_clean)), 200))
 
             # Function for the api request to get the data from td ameritrade
             def quotes_request(stocks):
@@ -110,16 +113,16 @@ def daily_equity_quotes(event, context):
             df['divDate'] = pd.to_datetime(df['divDate'])
             df['divDate'] = df['divDate'].dt.date
             df['divDate'] = df['divDate'].fillna(np.nan)
-            
+
             # Remove anything without a price
             df = df.loc[df['bidPrice'] > 0]
-            
+
             # Rename columns and format for bq (can't start with a number)
             df = df.rename(columns={
                 '52WkHigh': '_52WkHigh',
                  '52WkLow': '_52WkLow'
                 })
-            
+
             # Add to bigquery
             client = bigquery.Client()
 
@@ -146,7 +149,9 @@ def daily_equity_quotes(event, context):
 
         else:
             # Market Not Open Today
+            print("Market Not Open")
             pass
     except KeyError:
         # Not a weekday
+        print("Not a weekday")
         pass
