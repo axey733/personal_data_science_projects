@@ -13,7 +13,7 @@ import time
 #from google.oauth2 import service_account
 #print ("Finished Imports Updated")
 
-def daily_equity_quotes(event):
+def daily_equity_quotes(event, context):
     #print ("Get credentials")
     #export GOOGLE_APPLICATION_CREDENTIALS="/Users/rowanmccann/Documents/GitHub/data_science_projects/trading_bot/trading-bot-1-283110-3fbd97f6dbe9.json"
     #credentials = service_account.Credentials.from_service_account_file("/Users/rowanmccann/Documents/GitHub/data_science_projects/trading_bot/trading-bot-1-283110-3fbd97f6dbe9.json")
