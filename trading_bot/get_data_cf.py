@@ -9,14 +9,34 @@ import pyarrow
 from google.cloud import storage
 import string
 import time
+import os
+from google.oauth2 import service_account
+print ("Finished Imports Updated")
 
-def daily_equity_quotes(event, context):
+def daily_equity_quotes(event):
+    #print ("Get credentials")
+    #export GOOGLE_APPLICATION_CREDENTIALS="/Users/rowanmccann/Documents/GitHub/data_science_projects/trading_bot/trading-bot-1-283110-3fbd97f6dbe9.json"
+    #credentials = service_account.Credentials.from_service_account_file("/Users/rowanmccann/Documents/GitHub/data_science_projects/trading_bot/trading-bot-1-283110-3fbd97f6dbe9.json")
+    #client = language.LanguageServiceClient(credentials=credentials)
+    #print (credentials)
     # Get the api key from cloud storage
-    print ("Get API key")
+    print ("Get storage client")
     storage_client = storage.Client()
+    buckets = storage_client.list_buckets()
+
+    for bucket in buckets:
+        print(bucket.name)
+    blobs = storage_client.list_blobs('algobot_bucket_1')
+
+    for blob in blobs:
+        print(blob.name)
+    #print ("Get bucket")
     bucket = storage_client.get_bucket('algobot_bucket_1')
-    blob = bucket.blob('ameritrade-key.txt')
+    #print ("Get blob")
+    blob = bucket.blob('ameritradekey')
+    #print ("Get api key")
     api_key = blob.download_as_string()
+
     print ("API Key:")
     print(api_key)
     # Check if the market was open today. Cloud functions use UTC and I'm in
@@ -27,6 +47,8 @@ def daily_equity_quotes(event, context):
     print(today_fmt)
     # Call the td ameritrade hours endpoint for equities to see if it is open
     market_url = 'https://api.tdameritrade.com/v1/marketdata/EQUITY/hours'
+    #api_key = 'I4PNW349QNCPDHVCXMAHIPZRRXNVWZSQ'
+    #api_key = 'I4PNW349QNCPDHVCXMAHIPZRRXNVWZSQ'
 
     params = {
         'apikey': api_key,
