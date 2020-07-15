@@ -23,9 +23,9 @@ start_date_ms = unix_time_millis(start_date)
 end_date_ms = unix_time_millis(end_date)
 
 # Get a current list of all the stock symbols for the NYSE
-#alpha = list(string.ascii_uppercase)
+alpha = list(string.ascii_uppercase)
 alpha = ['A']
-print ("alpha:")
+#print ("alpha:")
 print(alpha)
 symbols = []
 print ("Get alpha")
@@ -124,4 +124,4 @@ df['date'] = df['date'].dt.strftime('%Y-%m-%d')
 #table_id = 'daily_quote_data_nyse'
 # Save to csv
 print ("Save to CSV")
-df.to_csv(r'/Users/rowanmccann/Documents/GitHub/a.csv')
+df.to_csv(r'equities_nyse.csv')
