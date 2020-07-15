@@ -78,8 +78,8 @@ for each in symbols_clean:
         )
 
     data_list.append(request.json())
-    print ("data list is:")
-    print (data_list)
+    #print ("data list is:")
+    #print (data_list)
     time.sleep(.1)
 
 # Create a list for each data point and loop through the json, adding the data to the lists
