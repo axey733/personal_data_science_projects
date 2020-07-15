@@ -24,7 +24,7 @@ end_date_ms = unix_time_millis(end_date)
 
 # Get a current list of all the stock symbols for the NYSE
 alpha = list(string.ascii_uppercase)
-alpha = ['A']
+#alpha = ['A']
 #print ("alpha:")
 print(alpha)
 symbols = []
