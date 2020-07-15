@@ -64,21 +64,22 @@ for each in symbols_clean:
     # This will grab the data for a single day
     params = {
         'apikey': consumer_key,
-        'periodType': 'day',
+        'periodType': 'month',
         'frequencyType': 'daily',
         'frequency': '1',
         'startDate': start_date_ms,
         'endDate': end_date_ms,
         'needExtendedHoursData': 'true'
         }
-    #print (params)
+
     request = requests.get(
         url=url,
         params=params
         )
 
     data_list.append(request.json())
-    #print (data_list)
+    print ("data list is:")
+    print (data_list)
     time.sleep(.1)
 
 # Create a list for each data point and loop through the json, adding the data to the lists
