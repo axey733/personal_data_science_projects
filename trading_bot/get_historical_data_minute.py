@@ -15,64 +15,72 @@ def unix_time_millis(dt):
     return int((dt - epoch).total_seconds() * 1000.0)
 
 # Get the historical dates you need.
-# Only doing one day here as an example
-date = datetime.strptime('2019-11-19', '%Y-%m-%d')
+start_date = datetime.strptime('2019-07-13', '%Y-%m-%d')
+end_date = datetime.strptime('2020-07-13', '%Y-%m-%d')
 
 # Convert to unix for the API
-date_ms = unix_time_millis(date)
+start_date_ms = unix_time_millis(start_date)
+end_date_ms = unix_time_millis(end_date)
 
 # Get a current list of all the stock symbols for the NYSE
-alpha = list(string.ascii_uppercase)
-
+#alpha = list(string.ascii_uppercase)
+alpha = ['A']
+print ("alpha:")
+print(alpha)
 symbols = []
-
+print ("Get alpha")
 for each in alpha:
+    print ("Get url")
     url = 'http://eoddata.com/stocklist/NYSE/{}.htm'.format(each)
+    print ("Get resp")
     resp = requests.get(url)
     site = resp.content
     soup = BeautifulSoup(site, 'html.parser')
     table = soup.find('table', {'class': 'quotes'})
     for row in table.findAll('tr')[1:]:
+        #print (symbols)
         symbols.append(row.findAll('td')[0].text.rstrip())
-        
+
 # Remove the extra letters on the end
-symbols_clean = []
+#symbols_clean = []
+#for each in symbols:
+#    each = each.replace('.', '-')
+#    symbols_clean.append((each.split('-')[0]))
 
-for each in symbols:
-    each = each.replace('.', '-')
-    symbols_clean.append((each.split('-')[0]))
-
+symbols_clean = ['A', 'AA', 'AAN']
+print (symbols_clean)
 # Get the price history for each stock. This can take a while
-consumer_key = '<YOUR CONSUMER KEY>'
+consumer_key = 'I4PNW349QNCPDHVCXMAHIPZRRXNVWZSQ'
 
 data_list = []
 
 for each in symbols_clean:
     url = r"https://api.tdameritrade.com/v1/marketdata/{}/pricehistory".format(each)
-
+    print (url)
     # You can do whatever period/frequency you want
     # This will grab the data for a single day
     params = {
         'apikey': consumer_key,
-        'periodType': 'month',
-        'frequencyType': 'daily',
+        'periodType': 'day',
+        'frequencyType': 'minute',
         'frequency': '1',
-        'startDate': date_ms,
-        'endDate': date_ms,
+        'startDate': start_date_ms,
+        'endDate': end_date_ms,
         'needExtendedHoursData': 'true'
         }
-
+    #print (params)
     request = requests.get(
         url=url,
         params=params
         )
 
     data_list.append(request.json())
+    #print (data_list)
     time.sleep(.5)
 
 # Create a list for each data point and loop through the json, adding the data to the lists
 symbl_l, open_l, high_l, low_l, close_l, volume_l, date_l = [], [], [], [], [], [], []
-
+print ("Create lists")
 for data in data_list:
     try:
         symbl_name = data['symbol']
@@ -97,15 +105,16 @@ df = pd.DataFrame(
         'open': open_l,
         'high': high_l,
         'low': low_l,
-        'close': close_l, 
+        'close': close_l,
         'volume': volume_l,
         'date': date_l
     }
  )
 
 # Format the dates
-df['date'] = pd.to_datetime(df['date'], unit='ms')
-df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+#df['date'] = pd.to_datetime(df['date'], unit='ms')
+#df['date'] = df['date'].dt.strftime('%Y-%m-%d')
 
 # Save to csv
-df.to_csv(r'<YOUR PATH>\back_data.csv')
+print ("Save to CSV")
+df.to_csv(r'/Users/rowanmccann/Documents/GitHub/back_data.csv')
