@@ -16,7 +16,7 @@ def unix_time_millis(dt):
 
 # Get the historical dates you need.
 start_date = datetime.strptime('2020-01-01', '%Y-%m-%d')
-end_date = datetime.strptime('2020-07-14', '%Y-%m-%d')
+end_date = datetime.strptime('2020-07-15', '%Y-%m-%d')
 
 # Convert to unix for the API
 start_date_ms = unix_time_millis(start_date)
