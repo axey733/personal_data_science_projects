@@ -123,7 +123,7 @@ def daily_equity_quotes(event, context):
             client = bigquery.Client()
 
             dataset_id = 'equity_data'
-            table_id = 'daily_quote_data'
+            table_id = 'equity_data_nyse_daily'
 
             dataset_ref = client.dataset(dataset_id)
             table_ref = dataset_ref.table(table_id)

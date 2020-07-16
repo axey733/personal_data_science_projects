@@ -17,10 +17,10 @@ from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices
 def trade_bot(event, context):
     # Get the api key from cloud storage
     storage_client = storage.Client()
-    bucket = storage_client.get_bucket('<NAME OF YOUR CLOUD STORAGE BUCKET>')
-    blob = bucket.blob('<NAME OF YOUR SECRET FILE>')
+    bucket = storage_client.get_bucket('algobot_bucket_1')
+    blob = bucket.blob('ameritradekey')
     api_key = blob.download_as_string()
-    
+
     # Check if the market was open today
     today = datetime.today().astimezone(pytz.timezone("America/New_York"))
     today_fmt = today.strftime('%Y-%m-%d')
@@ -31,14 +31,14 @@ def trade_bot(event, context):
         'apikey': api_key,
         'date': today_fmt
         }
-    
+
     request = requests.get(
         url=market_url,
         params=params
         ).json()
 
     try:
-        if request['equity']['EQ']['isOpen'] is True:                
+        if request['equity']['EQ']['isOpen'] is True:
             # BQ creds
             client = bigquery.Client()
 
@@ -48,8 +48,8 @@ def trade_bot(event, context):
                   symbol,
                   closePrice,
                   date
-                FROM 
-                  `trading-247-365.equity_data.daily_quote_data`
+                FROM
+                  `trading-bot-1-283110.equity_data.daily_quote_data`
                 """
 
             df = client.query(sql_hist).to_dataframe()
@@ -67,7 +67,7 @@ def trade_bot(event, context):
             df = df.rename(columns={'closePrice': 'close'})
 
             # Alpaca creds and api
-            blob = bucket.blob('<NAME OF YOUR SECRET FILE>')
+            blob = bucket.blob('ameritradekey')
             keys = blob.download_as_string()
             keys_str = keys.decode().split(',')
             key_id = keys_str[0]
@@ -92,7 +92,7 @@ def trade_bot(event, context):
                 symbol.append(each.symbol)
                 qty.append(int(each.qty))
                 market_value.append(float(each.market_value))
-                
+
             df_pf = pd.DataFrame(
                 {
                     'symbol': symbol,
@@ -141,7 +141,7 @@ def trade_bot(event, context):
                 # Create the portfolio
                 # Pivot to format for the optimization library
                 df_u = df_u.pivot_table(
-                    index='date', 
+                    index='date',
                     columns='symbol',
                     values='close',
                     aggfunc='sum'
@@ -205,10 +205,10 @@ def trade_bot(event, context):
             def sell_stocks(df, df_pf, sell_list, date):
                 # Get the current prices and the number of shares to sell
                 df_sell_price = df.loc[df['date'] == pd.to_datetime(date)]
-                
-                # Filter 
+
+                # Filter
                 df_sell_price = df_sell_price.loc[df_sell_price['symbol'].isin(sell_list)]
-                
+
                 # Check to see if there are any stocks in the current ones to buy
                 # that are not in the current portfolio. It's possible there may not be any
                 if df_sell_price.shape[0] > 0:
@@ -233,7 +233,7 @@ def trade_bot(event, context):
 
                 else:
                     df_sell = None
-                    
+
                 return df_sell
 
             # Call the function
@@ -296,7 +296,7 @@ def trade_bot(event, context):
                     df_sell_final = df_stocks_held_curr
 
                 return df_sell_final
-                
+
             # Call the function
             df_sell_final = stock_diffs(
                 df_sell=df_sell,
@@ -378,7 +378,7 @@ def trade_bot(event, context):
             for each in positions:
                 symbol.append(each.symbol)
                 qty.append(int(each.qty))
-                
+
             # New position df
             position_df = pd.DataFrame(
                 {
@@ -390,7 +390,7 @@ def trade_bot(event, context):
             # Add the current date and other info into the portfolio df for logging
             position_df['date'] = pd.to_datetime(today_fmt)
             position_df['strat'] = 'momentum_strat_1'
-            
+
             # Add the new pf to BQ
             # Format date to match schema
             position_df['date'] = position_df['date'].dt.date
@@ -417,7 +417,7 @@ def trade_bot(event, context):
             job.result()
 
             return 'Success'
-            
+
         else:
             # Market Not Open Today
             pass
@@ -425,4 +425,3 @@ def trade_bot(event, context):
     except KeyError:
         # Not a weekday
         pass
-        
